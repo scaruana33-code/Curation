@@ -1,0 +1,40 @@
+# Render Blueprint. In Render: New > Blueprint > pick this repo. Render asks for the
+# secrets marked sync:false. A persistent disk needs a paid plan (starter or above).
+services:
+  - type: web
+    name: linkedin-content-automation
+    runtime: docker
+    plan: starter
+    healthCheckPath: /healthz
+    autoDeploy: true
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_PATH
+        value: /data/app.db
+      - key: PUBLISH_MODE
+        value: dry-run            # change to "live" only after a full dry-run cycle
+      - key: APPROVAL_HOURS
+        value: "48"
+      - key: APPROVERS
+        value: scaruana33@gmail.com,admin@nomorereportsontherun.com,rharrington758@gmail.com
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: BASE_URL
+        sync: false               # e.g. https://linkedin-content-automation.onrender.com
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-sonnet-5-5
+      - key: SMTP_URL
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: LINKEDIN_ACCESS_TOKEN
+        sync: false
+      - key: LINKEDIN_AUTHOR_URN
+        sync: false
