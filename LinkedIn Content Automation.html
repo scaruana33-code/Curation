@@ -1,0 +1,516 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>LinkedIn Content Automation</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* Layout: Power Apps style shell. Blue app bar, left rail with two separate apps (Curation Intake, My To-Do), content on the right. */
+:root{
+  --bg:#f5f5f5; --surface:#ffffff; --surface-2:#fafafa; --ink:#242424; --ink-2:#5f5f5f; --line:#e0e0e0;
+  --accent:#0f6cbd; --accent-ink:#ffffff; --accent-soft:#ebf3fc;
+  --bar:#0f6cbd; --bar-ink:#ffffff;
+  --ok:#0e700e; --ok-soft:#e7f4e7; --warn:#8a4b00; --warn-soft:#fff4ce; --bad:#b10e1c; --bad-soft:#fde7e9; --info:#0f548c; --info-soft:#e5eff9;
+  --font:'Segoe UI Variable','Segoe UI',Inter,system-ui,-apple-system,sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1b1b1b; --surface:#262626; --surface-2:#2d2d2d; --ink:#f2f2f2; --ink-2:#b5b5b5; --line:#424242;
+  --accent:#479ef5; --accent-ink:#0a0a0a; --accent-soft:#102a43; --bar:#0b3a66; --bar-ink:#ffffff;
+  --ok:#78d278; --ok-soft:#10300f; --warn:#f5c04a; --warn-soft:#3a2b05; --bad:#ff9aa2; --bad-soft:#3d1519; --info:#8cc4f5; --info-soft:#0f2a44; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#1b1b1b; --surface:#262626; --surface-2:#2d2d2d; --ink:#f2f2f2; --ink-2:#b5b5b5; --line:#424242;
+  --accent:#479ef5; --accent-ink:#0a0a0a; --accent-soft:#102a43; --bar:#0b3a66; --bar-ink:#ffffff;
+  --ok:#78d278; --ok-soft:#10300f; --warn:#f5c04a; --warn-soft:#3a2b05; --bad:#ff9aa2; --bad-soft:#3d1519; --info:#8cc4f5; --info-soft:#0f2a44; color-scheme:dark;}
+*{box-sizing:border-box;}
+html,body{min-height:100%;}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.45;}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bar);z-index:30;}
+h1,h2,h3,h4{margin:0;font-weight:600;text-wrap:balance;}
+p{margin:0;}
+.mono{font-family:var(--mono);font-size:.82em;}
+.wrap{max-width:1300px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));}
+.appbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bar);color:var(--bar-ink);}
+.appbar .wrap{display:flex;align-items:center;gap:14px;height:48px;}
+.waffle{display:grid;grid-template-columns:repeat(3,4px);gap:3px;}
+.waffle i{display:block;width:4px;height:4px;border-radius:1px;background:var(--bar-ink);}
+.appbar .ttl{font-weight:600;}
+.appbar .env{font-size:12px;opacity:.85;}
+.appbar .sp{flex:1;}
+.appbar .who{display:flex;align-items:center;gap:8px;font-size:12px;}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--bar-ink);color:var(--bar);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;}
+.shell{display:grid;grid-template-columns:224px minmax(0,1fr);gap:28px;align-items:start;padding-block:20px 60px;}
+.rail{position:sticky;top:calc(48px + env(safe-area-inset-top,0px) + 20px);display:flex;flex-direction:column;gap:18px;}
+.group h4{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:600;padding:0 10px 6px;}
+.nav{display:flex;flex-direction:column;gap:2px;}
+.nav button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:4px;color:var(--ink);}
+.nav button:hover{background:var(--surface-2);}
+.nav button.active{background:var(--accent-soft);color:var(--accent);font-weight:600;}
+.nav button:focus-visible,.btn:focus-visible,.tab:focus-visible,.task:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+.count{min-width:20px;padding:1px 7px;border-radius:10px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:700;text-align:center;}
+.rail-foot{font-size:11px;color:var(--ink-2);padding:0 10px;}
+main{min-width:0;}
+.page-head{display:flex;flex-direction:column;gap:4px;margin-bottom:16px;}
+.crumb{font-size:12px;color:var(--ink-2);}
+.page-head h2{font-size:22px;}
+.page-head p{color:var(--ink-2);max-width:68ch;}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:20px;margin-bottom:16px;min-width:0;}
+.card h3{font-size:15px;margin-bottom:10px;}
+.cardhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:-20px -20px 16px;padding:12px 20px;background:var(--accent-soft);border-bottom:1px solid var(--line);border-radius:6px 6px 0 0;}
+.cardhead h3{margin:0;}
+label{display:block;font-size:12px;color:var(--ink-2);margin:14px 0 5px;}
+.req{color:var(--bad);margin-left:2px;}
+input[type=text],select,textarea{width:100%;padding:8px 10px;font:inherit;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink);}
+textarea{resize:vertical;min-height:68px;line-height:1.5;}
+select:disabled{opacity:.55;cursor:not-allowed;background:var(--surface-2);}
+input[type=range]{width:100%;accent-color:var(--accent);}
+input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;margin:2px 0 0;flex:none;}
+.row{display:flex;gap:14px;flex-wrap:wrap;}
+.row>div{flex:1 1 200px;min-width:0;}
+.hint{font-size:11px;color:var(--ink-2);margin-top:4px;}
+.path{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:14px;font-size:12px;color:var(--ink-2);}
+.chip{padding:3px 11px;border-radius:999px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600;}
+.chip.empty{border-style:dashed;border-color:var(--line);background:transparent;color:var(--ink-2);font-weight:400;}
+.btn{font:inherit;font-weight:600;padding:8px 16px;border-radius:4px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer;}
+.btn.sec{background:transparent;color:var(--accent);}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:var(--surface);}
+.btn.bad{background:var(--bad);border-color:var(--bad);color:var(--surface);}
+.btn.badline{background:transparent;color:var(--bad);border-color:var(--bad);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;align-items:center;}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap;}
+.pill.ok{background:var(--ok-soft);color:var(--ok);} .pill.warn{background:var(--warn-soft);color:var(--warn);}
+.pill.bad{background:var(--bad-soft);color:var(--bad);} .pill.info{background:var(--info-soft);color:var(--info);} .pill.mute{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line);}
+.notice{padding:10px 12px;border-radius:4px;background:var(--info-soft);color:var(--info);font-size:12px;margin-bottom:14px;}
+.notice.ok{background:var(--ok-soft);color:var(--ok);} .notice.warn{background:var(--warn-soft);color:var(--warn);}
+.err{color:var(--bad);font-size:12px;margin-top:6px;}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:16px;}
+.tile{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px;display:flex;flex-direction:column;gap:6px;min-width:0;}
+.tile:hover{border-color:var(--accent);} .tile:focus-visible{outline:2px solid var(--accent);}
+.tile h3{font-size:16px;margin:0;display:flex;gap:8px;align-items:center;} .tile p{color:var(--ink-2);font-size:13px;}
+.tile.big{padding:22px;} .tile.big h3{font-size:18px;}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px;}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;}
+.stat .v{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;} .stat .l{font-size:12px;color:var(--ink-2);}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px;border-bottom:1px solid var(--line);}
+.tab{all:unset;box-sizing:border-box;cursor:pointer;padding:8px 12px;color:var(--ink-2);border-bottom:2px solid transparent;margin-bottom:-1px;}
+.tab.active{color:var(--accent);font-weight:600;border-bottom-color:var(--accent);}
+.todo{display:grid;grid-template-columns:minmax(250px,340px) minmax(0,1fr);gap:16px;align-items:start;}
+.tasklist{display:flex;flex-direction:column;gap:8px;min-width:0;}
+.task{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:5px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:6px;min-width:0;}
+.task:hover{border-color:var(--accent);} .task.sel{border-color:var(--accent);background:var(--accent-soft);}
+.task .t1{display:flex;justify-content:space-between;gap:8px;align-items:center;}
+.task .t2{font-weight:600;overflow-wrap:anywhere;} .task .t3{font-size:12px;color:var(--ink-2);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.empty{padding:28px;text-align:center;color:var(--ink-2);border:1px dashed var(--line);border-radius:6px;background:var(--surface);}
+.meta{font-size:12px;color:var(--ink-2);display:flex;gap:8px 16px;flex-wrap:wrap;margin-top:6px;}
+.article{border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin-bottom:10px;background:var(--surface);}
+.article h4{font-size:14px;margin-bottom:4px;overflow-wrap:anywhere;} .article p{margin:6px 0;line-height:1.5;}
+.article a,.srcline a{color:var(--accent);overflow-wrap:anywhere;font-size:12px;}
+.article.picked{border-color:var(--ok);background:var(--ok-soft);}
+.draftbox{font-family:var(--font);line-height:1.55;min-height:380px;}
+.wc{font-size:12px;color:var(--ink-2);margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.ack{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--warn);background:var(--warn-soft);color:var(--warn);border-radius:4px;margin-top:14px;font-size:12px;}
+.ack label{margin:0;color:inherit;font-size:12px;}
+.log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}
+.log li{display:grid;grid-template-columns:130px minmax(0,1fr);gap:10px;font-size:12px;} .log time{color:var(--ink-2);}
+.result{text-align:center;padding:26px 10px;} .result .mark{width:46px;height:46px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;}
+.result .mark.ok{background:var(--ok-soft);color:var(--ok);} .result .mark.bad{background:var(--bad-soft);color:var(--bad);}
+.tablewrap{overflow-x:auto;} table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);padding:8px;border-bottom:1px solid var(--line);white-space:nowrap;}
+td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top;}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;}
+.rule{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:13px;} .rule:last-child{border:none;} .rule b{text-align:right;font-weight:600;}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 14px;} .chips span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--ink-2);}
+.bars{display:flex;align-items:flex-end;gap:8px;height:120px;border-bottom:1px solid var(--line);padding-top:8px;}
+.bars .b{flex:1;background:var(--accent);border-radius:2px 2px 0 0;opacity:.55;} .bars .b.cur{opacity:1;}
+.barlab{display:flex;gap:8px;margin-top:4px;} .barlab span{flex:1;text-align:center;font-size:11px;color:var(--ink-2);}
+.donutwrap{display:flex;align-items:center;gap:22px;flex-wrap:wrap;} .donut{width:120px;height:120px;border-radius:50%;flex:none;}
+.legend div{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:13px;} .legend i{width:10px;height:10px;border-radius:2px;display:block;}
+.road{padding-left:18px;margin:10px 0 0;color:var(--ink-2);line-height:1.8;}
+.srcline{margin-top:10px;font-size:12px;color:var(--ink-2);}
+#toast{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:6px;max-width:min(360px,calc(100vw - 32px));font-size:13px;}
+@media (max-width:900px){.todo{grid-template-columns:minmax(0,1fr);}}
+@media (max-width:820px){
+  .shell{grid-template-columns:minmax(0,1fr);gap:14px;padding-block:14px 50px;}
+  .rail{position:static;flex-direction:row;overflow-x:auto;gap:14px;padding-bottom:4px;} .group{flex:none;} .group h4{padding-left:0;} .nav{flex-direction:row;} .nav button{white-space:nowrap;} .rail-foot{display:none;}
+  .log li{grid-template-columns:minmax(0,1fr);gap:0;} .appbar .env{display:none;}
+}
+@media (prefers-reduced-motion:no-preference){.btn,.tile,.task{transition:border-color .12s,background .12s;}}
+</style>
+
+<div class="appbar"><div class="wrap">
+  <div class="waffle"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <span class="ttl">LinkedIn Content Automation</span><span class="env">Power Apps · Production</span>
+  <span class="sp"></span>
+  <div class="who"><span>Stephen Caruana</span><div class="avatar">SC</div></div>
+</div></div>
+<div class="wrap shell">
+  <nav class="rail" id="rail" aria-label="Apps"></nav>
+  <main id="main"></main>
+</div>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+const RECIPIENTS=["scaruana33@gmail.com","admin@nomorereportsontherun.com","rharrington758@gmail.com"];
+const HOUR=3600000;
+const INDUSTRIES={
+  "Contingent Workforce":["Vendor Management","MSP (Managed Service Programs)","Workforce Optimization","Talent Supply Chain","Compliance & Risk","Rate Benchmarking"],
+  "Technology and AI":["Generative AI","Machine Learning","Automation & RPA","Data Engineering","AI Governance & Ethics","Cloud Architecture","Predictive Analytics"],
+  "Healthcare":["Staffing Shortages","Travel Nursing","Credentialing & Compliance","Patient Outcomes Analytics","Healthcare Workforce Tech","Value-Based Care"],
+  "Legal":["eDiscovery","Contract Lifecycle Management (CLM)","Legal Operations","Compliance & Regulatory Trends","AI in Legal","Litigation Support"],
+  "Financial Services":["Risk Management","Regulatory Compliance (SEC, FINRA)","Fraud Detection","FinTech Innovation","Wealth Management Tech","Banking Transformation"],
+  "Retail and Consumer":["Omnichannel Strategy","Customer Experience (CX)","Supply Chain Optimization","Seasonal Staffing","Personalization & Data","eCommerce Trends"],
+  "Manufacturing":["Supply Chain Resilience","Smart Factory / Industry 4.0","Workforce Automation","Quality & Compliance","Procurement Optimization","ESG in Manufacturing"],
+  "Public Sector":["Government Staffing","Procurement & RFPs","Digital Transformation","Policy & Compliance","Workforce Modernization","Grants & Funding"]
+};
+/* The Topics list stores "<prefix> | <topic>". The Industry column says "Contingent Workforce" where the topic prefix says "Contingent Staffing". */
+const TOPIC_PREFIX={"Contingent Workforce":"Contingent Staffing"};
+const fullTopic=(i,t)=>`${TOPIC_PREFIX[i]||i} | ${t}`;
+const AUDIENCES=["Buyers / Client-Side Decision Makers","MSP Program Leaders","HR / Talent Leaders","Suppliers / Staffing Firms","VMS Practitioners","Procurement Leaders"];
+const STYLES=["Tactical","Strategic","Operational","Executive","Educational"];
+const RECENCY_MONTHS=[1,2,3,4,5,6];
+const ARTICLES=[
+  {n:1,title:"Seasonal Hiring Statistics 2026: Hiring Surges in September",source:"Monster.com — Monster Research Institute",date:"September 21, 2026",
+   summary:"Monster's 2026 Seasonal Hiring Index finds seasonal postings jump sharply from August into September and stay elevated through October, with fewer than 3% of listings using the word \"seasonal\" in the title, so the market hides inside standard roles like retail sales associate and package handler.",
+   url:"https://www.monster.com/career-advice/research/seasonal-hiring-index-2026"},
+  {n:2,title:"2026 Holiday Hiring Outlook: After Lowest Season Since 2008, Will Retailers Stock Up on Workers?",source:"Challenger, Gray & Christmas, Inc.",date:"September 23, 2026",
+   summary:"Challenger, Gray & Christmas projects Q4 2026 seasonal retail hiring will fall below last year's record-low 461,500 jobs, to roughly 450,000, as retailers lean on automation, existing staff, and on-demand pools instead of large seasonal waves.",
+   url:"https://www.challengergray.com/blog/2026-holiday-hiring-outlook-after-lowest-season-since-2008-will-retailers-stock-up-on-workers/"},
+  {n:3,title:"Holiday 2026: More Sales, Fewer Seasonal Hires",source:"T-ROC (The Revenue Optimization Companies)",date:"September 14, 2026",
+   summary:"T-ROC points to NRF's forecast of 4.4% holiday sales growth against the lowest seasonal hiring since 2009. The physical work of the season does not shrink with headcount, it lands on permanent staff, and peak readiness is decided in September, not November.",
+   url:"https://trocglobal.com/holiday-retail-execution-2026/"}
+];
+const WEEKLY_VOLUME=[4,6,5,7,6,8,6,5];
+const AGENT_WORKING=["Curating","Drafting","Revising"];
+
+const fmt=t=>new Date(t).toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'});
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $=s=>document.querySelector(s);
+
+function buildPost(art,topic,tags){
+  const t=(topic||'this').toLowerCase();
+  return `Everybody's reading the headline. Almost nobody is reading what it means for the plan.
+
+${art.title}, from ${art.source}, makes the point clearly: ${art.summary}
+
+Here's the strategic read. Whoever plans ${t} in the quarter it hits is already late. The real decisions get made weeks earlier, quietly, in capacity and supplier choices, and the bill shows up later. "Doing more with less" works in a board deck. It does not work on the floor when demand peaks.
+
+For buyers, MSP leads, staffing partners and workforce ops, the implication is direct: pressure-test your fill rates and contingent supply now, before the first missed SLA. The programs that look smart next quarter treated this month as the planning window, not the panic window.
+
+Worth a real conversation, not a hot take. Where does your organization stand right now?
+${tags?'\n'+tags+'\n':''}
+Source: ${art.url}
+
+Disclaimer - Created with generative AI and human-reviewed. For informational purposes only. Views are my own and do not represent any current or former employer or client. Please verify independently before acting. This content was developed with the assistance of generative AI and reviewed by a human prior to publication. It is provided for general informational and thought-leadership purposes only and does not constitute legal, financial, procurement, or employment advice.
+
+Forward-Looking Statement: This content may include forward-looking perspectives on the contingent workforce, staffing, MSP and VMS ecosystems, and workforce technology. Such views reflect current assumptions as of the publication date and are subject to change. Actual outcomes may differ materially.`;
+}
+function bodyWords(t){const i=t.indexOf('\n\nSource:');const b=i>=0?t.slice(0,i):t;return b.trim().split(/\s+/).filter(Boolean).length;}
+
+/* ---------- state ---------- */
+const T0=Date.now();
+let nextId=45;
+let runs=[
+  {id:"RUN-983727",industry:"Retail and Consumer",topic:"Seasonal Staffing",audience:"Buyers / Client-Side Decision Makers",mode:"Curation",recency:1,style:"Operational",audited:true,words:200,hashtags:"#ContingentWorkforce",notes:"",
+   status:"Gate 1 Pending",articles:ARTICLES,selected:null,draft:"",version:0,created:T0-20*HOUR,example:true,
+   log:[{t:T0-20*HOUR,text:"Request submitted from Curation Intake"},{t:T0-20*HOUR+90000,text:"Agent returned 3 articles. Gate 1 email sent to 3 approvers."}]},
+  {id:"RUN-044",industry:"Retail and Consumer",topic:"Seasonal Staffing",audience:"MSP Program Leaders",mode:"Curation",recency:1,style:"Strategic",audited:true,words:200,hashtags:"#ContingentWorkforce, #FutureOfWork",notes:"",
+   status:"Gate 2 Pending",articles:ARTICLES,selected:ARTICLES[2],draft:buildPost(ARTICLES[2],"Seasonal Staffing","#ContingentWorkforce, #FutureOfWork"),version:1,created:T0-31*HOUR,example:true,
+   log:[{t:T0-31*HOUR,text:"Request submitted from Curation Intake"},{t:T0-30*HOUR,text:"Gate 1 approved: Article 3 selected"},{t:T0-29*HOUR,text:"Draft v1 ready. Gate 2 email sent to 3 approvers."}]},
+  {id:"RUN-043",industry:"Financial Services",topic:"Regulatory Compliance (SEC, FINRA)",audience:"Buyers / Client-Side Decision Makers",mode:"Original",status:"Rejected — Gate 1",articles:[],version:0,created:T0-96*HOUR,ts:"Oct 14, 2026, 9:15 AM",log:[{t:T0-96*HOUR,text:"Rejected at Gate 1"}]},
+  {id:"RUN-042",industry:"Contingent Workforce",topic:"Vendor Management",audience:"Procurement Leaders",mode:"Hybrid",status:"Published",articles:[],version:1,created:T0-120*HOUR,ts:"Oct 13, 2026, 3:47 PM",url:"linkedin.com/posts/scaruana_sow-governance",log:[{t:T0-120*HOUR,text:"Published to LinkedIn"}]},
+  {id:"RUN-041",industry:"Contingent Workforce",topic:"Workforce Optimization",audience:"HR / Talent Leaders",mode:"Curation",status:"Published",articles:[],version:1,created:T0-124*HOUR,ts:"Oct 13, 2026, 2:02 PM",url:"linkedin.com/posts/scaruana_ai-workforce",log:[{t:T0-124*HOUR,text:"Published to LinkedIn"}]}
+];
+const intake={industry:"",topic:"",audience:"Buyers / Client-Side Decision Makers",recency:"1",style:"Strategic",audited:true,publisher:"",mode:"Curation",words:200,hashtags:"#ContingentWorkforce, #FutureOfWork",notes:""};
+const ui={page:"home",filter:"action",selectedId:null,banner:null,refreshed:null};
+
+const isGate=r=>r.status==="Gate 1 Pending"||r.status==="Gate 2 Pending";
+const isWorking=r=>AGENT_WORKING.includes(r.status);
+const isDone=r=>r.status==="Published"||r.status.startsWith("Rejected");
+const needCount=()=>runs.filter(isGate).length;
+const byId=id=>runs.find(r=>r.id===id);
+const log=(r,text)=>r.log.push({t:Date.now(),text});
+function kind(r){return r.status==="Published"?"ok":r.status.startsWith("Rejected")?"bad":isGate(r)?"warn":"info";}
+function due(r){const left=Math.max(0,48-(Date.now()-r.created)/HOUR);return{left,label:left<1?"<1h left":Math.floor(left)+"h left",urgent:left<12};}
+function g1(r){if(r.status==="Rejected — Gate 1")return"Rejected";if(r.status==="Gate 1 Pending"||r.status==="Curating")return"Pending";return"Approved";}
+function g2(r){if(r.status==="Published")return"Approved";if(r.status==="Rejected — Gate 2")return"Rejected";if(r.status==="Gate 2 Pending"||r.status==="Revising")return"Pending";return"—";}
+
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>{t.hidden=true;},3400);}
+
+/* ---------- shell ---------- */
+const NAV=[
+  ["",[["home","Home"]]],
+  ["App 1 · Curation Intake",[["intake","New request"]]],
+  ["App 2 · My To-Do",[["todo","Approvals"]]],
+  ["Insights",[["history","Run history"],["dashboard","Power BI dashboard"]]],
+  ["Reference",[["agent","News Curator agent"],["roadmap","Roadmap"]]]
+];
+function renderRail(){
+  $('#rail').innerHTML=NAV.map(([g,items])=>`<div class="group">${g?`<h4>${g}</h4>`:''}<div class="nav">${items.map(([id,l])=>
+    `<button data-act="nav" data-page="${id}" class="${ui.page===id?'active':''}">${l}${id==='todo'&&needCount()?`<span class="count">${needCount()}</span>`:''}</button>`).join('')}</div></div>`).join('')+
+    `<div class="rail-foot">Copilot Studio agent "LinkedIn Content curator gen2"<br>SharePoint run log · Power Automate</div>`;
+}
+function render(){
+  renderRail();
+  const m=$('#main'),p=ui.page;
+  m.innerHTML=({home:vHome,intake:vIntake,todo:vTodo,history:vHistory,dashboard:vDashboard,agent:vAgent,roadmap:vRoadmap})[p]();
+  if(p==='intake')bindIntake();
+}
+function go(p){ui.page=p;render();window.scrollTo(0,0);}
+
+/* ---------- Home ---------- */
+function vHome(){
+  return `
+  <div class="page-head"><div class="crumb">Enterprise proof of concept</div><h2>LinkedIn Content Automation</h2>
+  <p>Two separate apps share one run log. Requests go in through Curation Intake. Every approval, edit and rejection happens in My To-Do.</p></div>
+  <div class="tiles">
+    <button class="tile big" data-act="nav" data-page="intake"><h3>Curation Intake</h3><p>Choose an industry and topic, set the audience and post preferences, and submit a request to the News Curator agent.</p><span class="pill info" style="align-self:flex-start">Submit requests</span></button>
+    <button class="tile big" data-act="nav" data-page="todo"><h3>My To-Do ${needCount()?`<span class="count">${needCount()}</span>`:''}</h3><p>Your approval queue for Gate 1 (article selection) and Gate 2 (post approval). Approve, edit or reject.</p><span class="pill warn" style="align-self:flex-start">${needCount()} waiting on you</span></button>
+  </div>
+  <div class="tiles">
+    <button class="tile" data-act="nav" data-page="history"><h3>Run history</h3><p>Every run with gate decisions, status and published link.</p></button>
+    <button class="tile" data-act="nav" data-page="dashboard"><h3>Power BI dashboard</h3><p>KPIs, volume trend and status mix, refreshable from the run log.</p></button>
+    <button class="tile" data-act="nav" data-page="agent"><h3>News Curator agent</h3><p>Article rules, failure triggers and the voice profile.</p></button>
+    <button class="tile" data-act="nav" data-page="roadmap"><h3>Roadmap</h3><p>Phase 1 to Phase 3.</p></button>
+  </div>`;
+}
+
+/* ---------- App 1: Curation Intake ---------- */
+const opts=(list,val,ph)=>(ph?`<option value="">${ph}</option>`:'')+list.map(x=>`<option${x===val?' selected':''}>${esc(x)}</option>`).join('');
+function vIntake(){
+  const b=ui.banner?byId(ui.banner):null;
+  const recent=runs.slice(0,5).map(r=>`<tr><td class="mono">${r.id}</td><td>${esc(r.industry)}</td><td>${esc(r.topic)}</td><td><span class="pill ${kind(r)}">${r.status}</span></td><td>${isGate(r)?`<button class="btn sec" style="padding:4px 10px" data-act="open" data-id="${r.id}">Open in My To-Do</button>`:''}</td></tr>`).join('');
+  return `
+  <div class="page-head"><div class="crumb">App 1 · Curation Intake</div><h2>New content request</h2>
+  <p>Submitting sends a JSON payload to Power Automate. Approvals are handled in My To-Do, not here.</p></div>
+  ${b?`<div class="notice ok"><b>${b.id} submitted.</b> The agent is sourcing articles. When they are ready, Gate 1 appears in My To-Do. <button class="btn sec" style="padding:4px 10px;margin-left:8px" data-act="open" data-id="${b.id}">Open My To-Do</button></div>`:''}
+  <div class="card">
+    <div class="cardhead"><h3>Content request</h3><span class="pill mute">Draft</span></div>
+    <div class="row">
+      <div><label for="f-industry">Industry<span class="req">*</span></label><select id="f-industry">${opts(Object.keys(INDUSTRIES),intake.industry,"Select an industry")}</select><div class="hint">Parent list · ${Object.keys(INDUSTRIES).length} industries</div></div>
+      <div><label for="f-topic">Topic<span class="req">*</span></label><select id="f-topic"></select><div class="hint" id="topic-hint"></div></div>
+    </div>
+    <div class="path" id="path"></div><div class="hint" id="saved-as"></div>
+    <div class="row">
+      <div><label for="f-audience">Target audience<span class="req">*</span></label><select id="f-audience">${opts(AUDIENCES,intake.audience)}</select></div>
+      <div><label for="f-recency">Recency (months)</label><select id="f-recency">${RECENCY_MONTHS.map(n=>`<option value="${n}"${String(n)===String(intake.recency)?' selected':''}>${n} ${n===1?'month':'months'}</option>`).join('')}</select><div class="hint">Agent default is the current or prior month. Higher values widen the window.</div></div>
+    </div>
+    <div class="row">
+      <div><label for="f-style">Management style</label><select id="f-style">${opts(STYLES,intake.style)}</select></div>
+      <div><label for="f-mode">Mode</label><select id="f-mode">${opts(["Curation","Original","Hybrid"],intake.mode)}</select></div>
+    </div>
+    <label for="f-words">Post length: <span id="wlab">${intake.words}</span> words</label>
+    <input type="range" id="f-words" min="150" max="250" step="10" value="${intake.words}">
+    <div class="row"><div><label for="f-publisher">Publisher / account (optional)</label><input type="text" id="f-publisher" value="${esc(intake.publisher)}"><div class="hint">Prefer articles from this publisher or account.</div></div><div><label>Sources</label><label style="display:flex;gap:8px;align-items:center;margin:0;color:var(--ink);font-size:14px;padding-top:6px"><input type="checkbox" id="f-audited"${intake.audited?' checked':''}> Audited sources only</label><div class="hint">Limit articles to vetted publishers.</div></div></div>
+    <label for="f-hash">Hashtags</label><input type="text" id="f-hash" value="${esc(intake.hashtags)}">
+    <label for="f-notes">Special instructions</label><textarea id="f-notes" placeholder="Optional notes passed through to the agent">${esc(intake.notes)}</textarea>
+    <div class="actions"><button class="btn" id="submit-req" data-act="submit" disabled>Submit to Power Automate</button><button class="btn sec" data-act="clear">Clear</button></div>
+  </div>
+  <div class="card"><h3>Recent requests</h3><div class="tablewrap"><table><thead><tr><th>Run</th><th>Industry</th><th>Topic</th><th>Status</th><th></th></tr></thead><tbody>${recent}</tbody></table></div></div>`;
+}
+function bindIntake(){
+  const ind=$('#f-industry'),top=$('#f-topic'),sub=$('#submit-req');
+  const sync=()=>{
+    const list=intake.industry?INDUSTRIES[intake.industry]:[];
+    top.innerHTML=intake.industry?opts(list,intake.topic,`Select a topic (${list.length} available)`):'<option value="">Select an industry first</option>';
+    top.disabled=!intake.industry; sub.disabled=!(intake.industry&&intake.topic);
+    $('#topic-hint').textContent=intake.industry?'Child list · filtered to '+intake.industry:'Child list · unlocks after you pick an industry';
+    $('#saved-as').textContent=intake.industry&&intake.topic?'Saved to the request list as: '+fullTopic(intake.industry,intake.topic):'';
+    $('#path').innerHTML='Selection'+`<span class="chip ${intake.industry?'':'empty'}">${esc(intake.industry||'Industry')}</span>›<span class="chip ${intake.topic?'':'empty'}">${esc(intake.topic||'Topic')}</span>`;
+  };
+  ind.onchange=e=>{intake.industry=e.target.value;intake.topic='';sync();};
+  top.onchange=e=>{intake.topic=e.target.value;sync();};
+  ['audience','recency','style','mode'].forEach(k=>{$('#f-'+k).onchange=e=>{intake[k]=e.target.value;};});
+  $('#f-words').oninput=e=>{intake.words=+e.target.value;$('#wlab').textContent=e.target.value;};
+  $('#f-hash').oninput=e=>{intake.hashtags=e.target.value;};
+  $('#f-notes').oninput=e=>{intake.notes=e.target.value;};
+  $('#f-publisher').oninput=e=>{intake.publisher=e.target.value;};
+  $('#f-audited').onchange=e=>{intake.audited=e.target.checked;};
+  sync();
+}
+
+/* ---------- App 2: My To-Do ---------- */
+function filtered(){
+  const f=ui.filter;
+  return runs.filter(r=>f==='action'?isGate(r):f==='agent'?isWorking(r):f==='done'?isDone(r):true);
+}
+function vTodo(){
+  const g1n=runs.filter(r=>r.status==="Gate 1 Pending").length,g2n=runs.filter(r=>r.status==="Gate 2 Pending").length;
+  const soon=runs.filter(r=>isGate(r)&&due(r).urgent).length;
+  const list=filtered();
+  const cur=byId(ui.selectedId)||list[0]||null;
+  const tabs=[["action","Needs my action",needCount()],["agent","With agent",runs.filter(isWorking).length],["done","Done",runs.filter(isDone).length],["all","All",runs.length]];
+  const items=list.map(r=>{const d=due(r);return `<button class="task ${cur&&cur.id===r.id?'sel':''}" data-act="select" data-id="${r.id}">
+    <div class="t1"><span class="mono">${r.id}</span><span class="pill ${kind(r)}">${r.status}</span></div>
+    <div class="t2">${esc(r.topic)}</div>
+    <div class="t3"><span>${esc(r.industry)}</span>${isGate(r)?`<span style="color:${d.urgent?'var(--bad)':'inherit'}">${d.label}</span>`:''}</div></button>`;}).join('');
+  return `
+  <div class="page-head"><div class="crumb">App 2 · My To-Do</div><h2>Approvals</h2>
+  <p>Act on Gate 1 and Gate 2 here. Each gate has a 48-hour window. A decision updates the run log and Power Automate continues the flow.</p></div>
+  <div class="stats">
+    <div class="stat"><div class="v">${g1n}</div><div class="l">Gate 1 · article selection</div></div>
+    <div class="stat"><div class="v">${g2n}</div><div class="l">Gate 2 · post approval</div></div>
+    <div class="stat"><div class="v" style="color:${soon?'var(--bad)':'inherit'}">${soon}</div><div class="l">Due within 12 hours</div></div>
+  </div>
+  <div class="tabs" role="tablist">${tabs.map(([k,l,n])=>`<button role="tab" class="tab ${ui.filter===k?'active':''}" data-act="filter" data-f="${k}">${l} (${n})</button>`).join('')}</div>
+  <div class="todo">
+    <div class="tasklist">${items||'<div class="empty">Nothing here. New requests from Curation Intake show up when the agent returns articles.</div>'}</div>
+    <div>${cur?vTask(cur):'<div class="empty">Select a task to review it.</div>'}</div>
+  </div>
+  <p class="hint" style="margin-top:14px">RUN-983727 and RUN-044 are example tasks. Articles returned for new requests are the sample results from RUN-983727 until the Copilot agent is connected.</p>`;
+}
+function actLog(r){
+  return `<div class="card"><h3>Activity</h3><ul class="log">${r.log.slice().reverse().map(e=>`<li><time>${fmt(e.t)}</time><span>${esc(e.text)}</span></li>`).join('')}</ul></div>`;
+}
+function head(r){
+  const d=due(r);
+  return `<div class="cardhead"><div><h3>${esc(r.topic)}</h3><div class="meta"><span class="mono">${r.id}</span><span>${esc(r.industry)}</span><span>Audience: ${esc(r.audience)}</span><span>Mode: ${esc(r.mode)}</span>${r.style?`<span>Style: ${esc(r.style)}</span>`:''}${r.recency?`<span>Recency: ${r.recency} mo</span>`:''}${r.audited?'<span>Audited sources only</span>':''}</div></div>
+  <div style="text-align:right"><span class="pill ${kind(r)}">${r.status}</span>${isGate(r)?`<div class="hint" style="color:${d.urgent?'var(--bad)':'var(--ink-2)'}">${d.label} · window 48h</div>`:''}</div></div>`;
+}
+function vTask(r){
+  if(r.status==="Gate 1 Pending"){
+    const cards=r.articles.map(a=>`<div class="article"><h4>Article ${a.n}. ${esc(a.title)}</h4><div class="hint">${esc(a.source)} · Published ${a.date}</div><p>${esc(a.summary)}</p><a href="${a.url}" target="_blank" rel="noopener">${a.url}</a>
+      <div class="actions" style="margin-top:10px"><button class="btn ok" data-act="approveArticle" data-id="${r.id}" data-n="${a.n}">Approve article ${a.n}</button></div></div>`).join('');
+    return `<div class="card">${head(r)}
+      <div class="notice">Gate 1 email sent to ${RECIPIENTS.join(', ')}. Pick one article to move to drafting.</div>
+      ${cards}
+      <label for="c-${r.id}">Comments (needed to send back for new articles)</label>
+      <textarea id="c-${r.id}" placeholder="e.g. more on VMS pricing, less general hiring stats"></textarea><div class="err" id="err-${r.id}" hidden></div>
+      <div class="actions">
+        <button class="btn sec" data-act="sendBack" data-id="${r.id}">Send back with comments</button>
+        <button class="btn badline" data-act="arm" data-id="${r.id}" id="arm-${r.id}">Reject</button>
+        <span id="armrow-${r.id}" hidden><span class="hint" style="margin-right:6px">Reject and end this run?</span><button class="btn bad" data-act="reject" data-id="${r.id}">Confirm reject</button> <button class="btn sec" data-act="disarm" data-id="${r.id}">Cancel</button></span>
+      </div></div>${actLog(r)}`;
+  }
+  if(r.status==="Gate 2 Pending"){
+    const a=r.selected,n=bodyWords(r.draft);
+    return `<div class="card">${head(r)}
+      <div class="notice">Gate 2 email sent to ${RECIPIENTS.join(', ')}. Nothing publishes until you approve.</div>
+      <h4 style="margin-bottom:6px">LinkedIn draft v${r.version||1}</h4>
+      <textarea class="draftbox" id="d-${r.id}" data-draft="${r.id}" rows="22">${esc(r.draft)}</textarea>
+      <div class="wc"><span id="wc-${r.id}" class="pill ${n>=150&&n<=250?'ok':'warn'}">${n} words</span><span>Target 150 to 250 words, not counting the footers. You can edit the text directly.</span></div>
+      ${a?`<div class="srcline">Source article: <a href="${a.url}" target="_blank" rel="noopener">${esc(a.title)}</a> (${esc(a.source)})</div>`:''}
+      <div class="ack"><input type="checkbox" id="ack-${r.id}" data-ack="${r.id}"><label for="ack-${r.id}">GenAI disclaimer acknowledgment. By approving, I confirm this post was reviewed against the source article and both footers are present.</label></div>
+      <label for="c-${r.id}">Feedback for the agent (needed to request edits)</label>
+      <textarea id="c-${r.id}" placeholder="e.g. tighten the hook, add a buyer question at the end"></textarea><div class="err" id="err-${r.id}" hidden></div>
+      <div class="actions">
+        <button class="btn ok" id="approve-${r.id}" data-act="publish" data-id="${r.id}" disabled>Approve &amp; publish</button>
+        <button class="btn sec" data-act="saveEdits" data-id="${r.id}">Save my edits</button>
+        <button class="btn sec" data-act="reqEdits" data-id="${r.id}">Request edits</button>
+        <button class="btn badline" data-act="arm" data-id="${r.id}" id="arm-${r.id}">Reject</button>
+        <span id="armrow-${r.id}" hidden><span class="hint" style="margin-right:6px">Reject and stop the process?</span><button class="btn bad" data-act="reject" data-id="${r.id}">Confirm reject</button> <button class="btn sec" data-act="disarm" data-id="${r.id}">Cancel</button></span>
+      </div></div>${actLog(r)}`;
+  }
+  if(isWorking(r)){
+    const w={Curating:"The agent is sourcing new articles.",Drafting:"The agent is writing the LinkedIn draft from the approved article.",Revising:"The agent is revising the draft with your feedback."}[r.status];
+    return `<div class="card">${head(r)}<div class="empty">${w}<br>This page updates when the result is ready. Gate ${r.status==="Curating"?1:2} comes back to you.</div></div>${actLog(r)}`;
+  }
+  if(r.status==="Published"){
+    return `<div class="card">${head(r)}<div class="result"><div class="mark ok">✓</div><h3>Published to LinkedIn</h3>
+      <p class="hint" style="margin-top:6px">${r.url?esc(r.url):''}${r.publishedAt?' · '+fmt(r.publishedAt):''}</p>
+      <p class="hint">Confirmation sent to ${RECIPIENTS.join(', ')} by email and Teams.</p></div></div>${actLog(r)}`;
+  }
+  return `<div class="card">${head(r)}<div class="result"><div class="mark bad">✕</div><h3>${esc(r.status)}</h3><p class="hint" style="margin-top:6px">Alert sent to all three approvers. The run is closed.</p></div></div>${actLog(r)}`;
+}
+
+/* ---------- actions ---------- */
+function later(fn,ms){setTimeout(()=>{fn();render();},ms);}
+const ACTIONS={
+  nav:(id,el)=>go(el.dataset.page),
+  open:(id)=>{ui.selectedId=id;ui.filter='all';ui.page='todo';render();window.scrollTo(0,0);},
+  select:(id)=>{ui.selectedId=id;render();},
+  filter:(id,el)=>{ui.filter=el.dataset.f;ui.selectedId=null;render();},
+  clear:()=>{intake.industry='';intake.topic='';intake.notes='';render();},
+  submit:()=>{
+    const r={id:`RUN-${String(nextId++).padStart(3,'0')}`,industry:intake.industry,topic:intake.topic,topicFull:fullTopic(intake.industry,intake.topic),audience:intake.audience,mode:intake.mode,recency:+intake.recency,style:intake.style,audited:intake.audited,publisher:intake.publisher,requestedBy:"Stephen Caruana",runDate:new Date().toISOString(),words:intake.words,hashtags:intake.hashtags,notes:intake.notes,
+      status:"Curating",articles:[],selected:null,draft:"",version:0,created:Date.now(),log:[]};
+    log(r,"Request submitted from Curation Intake");runs.unshift(r);ui.banner=r.id;
+    intake.industry='';intake.topic='';intake.notes='';render();toast(r.id+' submitted');
+    later(()=>{r.status="Gate 1 Pending";r.articles=ARTICLES;log(r,"Agent returned 3 articles. Gate 1 email sent to 3 approvers.");},900);
+  },
+  approveArticle:(id,el)=>{
+    const r=byId(id);r.selected=r.articles.find(a=>a.n==el.dataset.n);r.status="Drafting";
+    log(r,`Gate 1 approved: Article ${r.selected.n} selected`);render();toast('Article '+r.selected.n+' approved. Drafting started.');
+    later(()=>{r.draft=buildPost(r.selected,r.topic,r.hashtags);r.version=1;r.status="Gate 2 Pending";log(r,"Draft v1 ready. Gate 2 email sent to 3 approvers.");},900);
+  },
+  sendBack:(id)=>{
+    const v=$('#c-'+id).value.trim(),e=$('#err-'+id);
+    if(!v){e.textContent="Add a comment so the agent knows what to change.";e.hidden=false;return;}
+    const r=byId(id);r.status="Curating";log(r,"Gate 1 sent back: "+v);render();toast('Sent back to the agent');
+    later(()=>{r.status="Gate 1 Pending";r.articles=ARTICLES;log(r,"New article options returned (sample results until the live agent is connected).");},900);
+  },
+  arm:(id)=>{$('#armrow-'+id).hidden=false;$('#arm-'+id).hidden=true;},
+  disarm:(id)=>{$('#armrow-'+id).hidden=true;$('#arm-'+id).hidden=false;},
+  reject:(id)=>{const r=byId(id);const g=r.status==="Gate 1 Pending"?1:2;r.status=`Rejected — Gate ${g}`;log(r,`Rejected at Gate ${g}. Alert sent, flow terminated.`);render();toast(r.id+' rejected');},
+  saveEdits:(id)=>{const r=byId(id);r.draft=$('#d-'+id).value;log(r,"Draft edited by approver");render();toast('Edits saved');},
+  reqEdits:(id)=>{
+    const v=$('#c-'+id).value.trim(),e=$('#err-'+id);
+    if(!v){e.textContent="Add feedback so the agent knows what to change.";e.hidden=false;return;}
+    const r=byId(id);r.draft=$('#d-'+id).value;r.status="Revising";log(r,"Gate 2 edits requested: "+v);render();toast('Feedback sent to the agent');
+    later(()=>{r.version+=1;r.status="Gate 2 Pending";log(r,`Draft v${r.version} returned (the live agent rewrites per feedback; this preview keeps your text).`);},1000);
+  },
+  publish:(id)=>{
+    const r=byId(id);if(!$('#ack-'+id).checked)return;
+    r.draft=$('#d-'+id).value;r.status="Published";r.publishedAt=Date.now();r.url=`linkedin.com/posts/scaruana_${r.id.toLowerCase()}`;
+    log(r,"Gate 2 approved. Published to LinkedIn. Confirmation sent by email and Teams.");render();toast(r.id+' published');
+  },
+  refresh:()=>{ui.refreshed=new Date();render();toast('Dashboard refreshed from the run log');}
+};
+document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el||el.disabled)return;const f=ACTIONS[el.dataset.act];if(f)f(el.dataset.id,el);});
+document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.ack){const b=document.getElementById('approve-'+e.target.dataset.ack);if(b)b.disabled=!e.target.checked;}});
+document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.draft){const id=e.target.dataset.draft,n=bodyWords(e.target.value),w=document.getElementById('wc-'+id);w.textContent=n+' words';w.className='pill '+(n>=150&&n<=250?'ok':'warn');}});
+
+/* ---------- history ---------- */
+function vHistory(){
+  const rows=runs.map(r=>`<tr><td class="mono">${r.id}</td><td>${esc(r.industry)}</td><td>${esc(r.topic)}</td><td>${esc(r.audience)}</td><td>${esc(r.mode)}</td><td>${g1(r)}</td><td>${g2(r)}</td><td><span class="pill ${kind(r)}">${r.status}</span></td><td class="mono">${r.url?esc(r.url):'—'}</td><td>${r.ts||fmt(r.created)}</td></tr>`).join('');
+  return `<div class="page-head"><div class="crumb">Insights</div><h2>Run history</h2><p>Every run with its gate decisions, status and published link. This is the SharePoint run log the dashboard reads from.</p></div>
+  <div class="card"><div class="tablewrap"><table><thead><tr><th>Run</th><th>Industry</th><th>Topic</th><th>Audience</th><th>Mode</th><th>Gate 1</th><th>Gate 2</th><th>Status</th><th>Published URL</th><th>Created</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+
+/* ---------- dashboard ---------- */
+function vDashboard(){
+  const n=runs.length,pub=runs.filter(r=>r.status==="Published").length,rej=runs.filter(r=>r.status.startsWith("Rejected")).length,pend=n-pub-rej;
+  const p1=pub/n*100,p2=p1+pend/n*100,pct=x=>Math.round(x/n*100);
+  const conic=`conic-gradient(var(--ok) 0 ${p1}%, var(--warn) ${p1}% ${p2}%, var(--bad) ${p2}% 100%)`;
+  const mx=Math.max(...WEEKLY_VOLUME);
+  const queue=runs.filter(isGate);
+  return `<div class="page-head"><div class="crumb">Insights</div><h2>Power BI dashboard</h2><p>Metrics computed from the run log. Use refresh to pull the latest after approving or submitting.</p></div>
+  <div class="card"><div class="actions" style="margin:0"><button class="btn sec" data-act="refresh">Refresh from run log</button><span class="hint">${ui.refreshed?'Last refreshed '+ui.refreshed.toLocaleTimeString('en-US'):'Not refreshed yet this session'}</span></div></div>
+  <div class="stats">
+    <div class="stat"><div class="v">${n}</div><div class="l">Total runs</div></div>
+    <div class="stat"><div class="v">${pub}</div><div class="l">Published posts</div></div>
+    <div class="stat"><div class="v">${pend}</div><div class="l">In progress</div></div>
+    <div class="stat"><div class="v">${(rej/n*100).toFixed(1)}%</div><div class="l">Rejection rate</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><h3>Weekly run volume (example data)</h3><div class="bars">${WEEKLY_VOLUME.map((v,i)=>`<div class="b ${i===WEEKLY_VOLUME.length-1?'cur':''}" style="height:${v/mx*100}%" title="${v} runs"></div>`).join('')}</div><div class="barlab">${WEEKLY_VOLUME.map((v,i)=>`<span>W${i+1}</span>`).join('')}</div></div>
+    <div class="card"><h3>Status breakdown</h3><div class="donutwrap"><div class="donut" style="background:${conic}" role="img" aria-label="Status breakdown"></div>
+      <div class="legend"><div><i style="background:var(--ok)"></i>Published · ${pct(pub)}%</div><div><i style="background:var(--warn)"></i>In progress · ${pct(pend)}%</div><div><i style="background:var(--bad)"></i>Rejected · ${pct(rej)}%</div></div></div></div>
+  </div>
+  <div class="card"><h3>Active approval queue</h3><div class="tablewrap"><table><thead><tr><th>Run</th><th>Topic</th><th>Gate</th><th>Window</th><th></th></tr></thead><tbody>${queue.map(r=>`<tr><td class="mono">${r.id}</td><td>${esc(r.topic)}</td><td>${r.status==="Gate 1 Pending"?"Gate 1 · article selection":"Gate 2 · post approval"}</td><td>${due(r).label}</td><td><button class="btn sec" style="padding:4px 10px" data-act="open" data-id="${r.id}">Open</button></td></tr>`).join('')||'<tr><td colspan="5" style="color:var(--ink-2)">Queue is empty.</td></tr>'}</tbody></table></div></div>`;
+}
+
+/* ---------- reference ---------- */
+function vAgent(){
+  return `<div class="page-head"><div class="crumb">Reference</div><h2>News Curator agent</h2><p>Copilot Studio agent "LinkedIn Content curator gen2". It is stateless, returns structured JSON, and never controls approvals.</p></div>
+  <div class="card"><h3>Role</h3><p style="color:var(--ink-2)">Receives a JSON payload from Power Automate with industry, topic, audience, recency and mode. Sources 1 to 3 credible external articles, validates every required field, and hands off. In post mode it writes a 150 to 250 word draft from the approved article only.</p>
+  <div class="chips"><span>Does not control approvals</span><span>No memory between runs</span><span>Structured JSON only</span><span>Hands off to Power Automate</span></div>
+  <div class="grid2"><div><h3>Article rules</h3>
+    <div class="rule"><span>Volume</span><b>1 to 3 per run</b></div><div class="rule"><span>Recency</span><b>Current or prior month</b></div><div class="rule"><span>Fabrication</span><b>None, real sources only</b></div><div class="rule"><span>Required fields</span><b>Title, publisher, date, summary, URL</b></div><div class="rule"><span>Links</span><b>HTTPS only</b></div></div>
+  <div><h3>Failure triggers</h3>
+    <div class="rule"><span>No results</span><b>Zero matching articles</b></div><div class="rule"><span>Incomplete</span><b>Missing date or URL</b></div><div class="rule"><span>Recency</span><b>Outside current or prior month</b></div><div class="rule"><span>Action</span><b>Alert sent, flow terminated</b></div></div></div></div>
+  <div class="card"><h3>Stephen Caruana voice</h3><p style="color:var(--ink-2)">Executive, strategic, NYC-confident and non-promotional. Think Judge Judy at Amazon.</p>
+  <div class="chips">${["Executive","Strategic","Thought leadership","NYC confident","Direct","Quick-witted","Non-promotional","Authentic","Conversational"].map(c=>`<span>${c}</span>`).join('')}</div>
+  <div class="grid2"><div><h3>Sounds like</h3><p style="color:var(--ink-2)">Mouthy and confident. No fluff. Always adds a point of view.</p></div><div><h3>Never sounds like</h3><p style="color:var(--ink-2)">"Excited to share..." or "Our solution helps..." or "Thought-provoking read!"</p></div></div>
+  <div class="notice warn" style="margin:14px 0 0">Every post ends with the GenAI disclaimer and the Forward-Looking Statement.</div></div>`;
+}
+function vRoadmap(){
+  const ph=[["Phase 1 · Now","POC complete",["Curation Intake app with cascading Industry and Topic lists","My To-Do approvals page for Gate 1 and Gate 2","Shared run log","Webhook to Power Automate"]],
+    ["Phase 2 · Next","In progress",["Live Power Automate webhook","LinkedIn API publishing","Teams adaptive card approvals","SharePoint real-time sync"]],
+    ["Phase 3 · Later","2027",["Multi-publisher support","A/B post variants","Engagement feedback loop","Auto-scheduling"]]];
+  return `<div class="page-head"><div class="crumb">Reference</div><h2>Roadmap</h2></div><div class="grid2">${ph.map(([t,s,i])=>`<div class="card"><h3>${t}</h3><div class="hint">${s}</div><ul class="road">${i.map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('')}</div>`;
+}
+
+render();
+</script>
+
+</body></html>
