@@ -19,7 +19,7 @@ npm test
 ```
 
 ## Go live (what only you can supply)
-Copy `.env.example`, set the values as secrets in your host (never commit them), and deploy the `Dockerfile` (a `fly.toml` example is included). Mount a persistent volume at `/data` for the SQLite database.
+Copy `.env.example`, set the values as secrets in your host (never commit them), and deploy the `Dockerfile` (`render.yaml` for Render and a `fly.toml` example for Fly.io are included). Mount a persistent volume at `/data` for the SQLite database.
 
 | Needed | Why |
 |---|---|
@@ -30,6 +30,12 @@ Copy `.env.example`, set the values as secrets in your host (never commit them),
 | `LINKEDIN_ACCESS_TOKEN`, `LINKEDIN_AUTHOR_URN` | publishing; needs a LinkedIn developer app with the `w_member_social` permission |
 
 `PUBLISH_MODE` stays `dry-run` (nothing is posted) until you set it to `live`. Do a full dry run with all three approvers first.
+
+### Deploy on Render
+1. Render dashboard: New > Blueprint, choose this repo. It reads `render.yaml`.
+2. Enter the secrets Render asks for (`BASE_URL`, `ANTHROPIC_API_KEY`, `SMTP_URL`, `MAIL_FROM`, and the two LinkedIn values; leave LinkedIn blank for the dry run).
+3. After the first deploy, set `BASE_URL` to the service's `https://…onrender.com` address and redeploy.
+4. Sign in, run a full cycle with all three approvers, then set `PUBLISH_MODE=live`.
 
 ## Security notes
 - Sign-in is by emailed link, limited to the `APPROVERS` list. Sessions are signed, HttpOnly cookies.
