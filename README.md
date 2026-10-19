@@ -11,12 +11,14 @@ A governed workflow for Stephen Caruana's LinkedIn thought-leadership posts.
 
 Approvals expire after 48 hours (hourly check). Double actions on the same gate are refused.
 
-## Run locally
-```
-npm install
-npm run dev        # mock agent + dry-run publishing, sign-in link shown on the page
-npm test
-```
+## Run locally (your own computer)
+Needs Node.js 22.13 or newer (https://nodejs.org).
+- **Windows:** double-click `start.bat`. **Mac/Linux:** run `./start.sh`.
+- Open http://localhost:3000. On the sign-in page, enter an approver email; with no email server set, a sign-in link appears right on the page.
+- With no `.env`, it uses sample articles and never posts to LinkedIn. For real curation, copy `.env.example` to `.env`, set `ANTHROPIC_API_KEY`.
+- Your data is saved in the `data` folder next to the app.
+
+Tests: `npm test`.
 
 ## Go live (what only you can supply)
 Copy `.env.example`, set the values as secrets in your host (never commit them), and deploy the `Dockerfile` (a `fly.toml` example is included). Mount a persistent volume at `/data` for the SQLite database.
