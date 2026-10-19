@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LinkedIn Content Automation</title>
+<style>
+:root{--bg:#f5f5f5;--card:#fff;--fg:#242424;--mut:#616161;--line:#e0e0e0;--acc:#0f6cbd;--accfg:#fff;--bar:#0f6cbd;--ok:#107c10;--warn:#bc4b09;--bad:#c50f1f}
+@media(prefers-color-scheme:dark){:root{--bg:#1f1f1f;--card:#292929;--fg:#f5f5f5;--mut:#adadad;--line:#3d3d3d;--acc:#479ef5;--accfg:#0b0b0b;--bar:#0a4a82;--ok:#6bb700;--warn:#f7630c;--bad:#f1707b}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 "Segoe UI",system-ui,sans-serif}
+header{background:var(--bar);color:#fff;display:flex;align-items:center;gap:16px;padding:10px 16px;flex-wrap:wrap}
+header h1{font-size:16px;margin:0;font-weight:600}header nav{display:flex;gap:4px;flex:1;flex-wrap:wrap}
+header button{background:none;border:0;color:#fff;padding:6px 12px;border-radius:4px;cursor:pointer;font:inherit}
+header button.on,header button:hover{background:rgba(255,255,255,.2)}
+.badge{background:#fff;color:var(--bar);border-radius:10px;padding:0 7px;margin-left:6px;font-size:12px;font-weight:600}
+main{max-width:1000px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:12px}
+h2{margin:0 0 12px;font-size:18px}label{display:block;font-weight:600;margin:10px 0 4px}
+select,input[type=text],input[type=email],textarea{width:100%;padding:8px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--fg);font:inherit}
+textarea{min-height:90px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0 16px}
+button.p,button.s,button.d{padding:8px 16px;border-radius:4px;cursor:pointer;font:inherit;border:1px solid var(--acc)}
+button.p{background:var(--acc);color:var(--accfg)}button.s{background:none;color:var(--acc)}button.d{background:none;color:var(--bad);border-color:var(--bad)}
+button:disabled{opacity:.45;cursor:not-allowed}.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;border:1px solid var(--line)}
+.pill.g{color:var(--warn);border-color:var(--warn)}.pill.ok{color:var(--ok);border-color:var(--ok)}.pill.bad{color:var(--bad);border-color:var(--bad)}
+.item{display:flex;justify-content:space-between;gap:8px;padding:10px;border-bottom:1px solid var(--line);cursor:pointer;flex-wrap:wrap}.item:hover{background:var(--bg)}
+.mut{color:var(--mut)}.msg{padding:8px 12px;border-radius:4px;margin-bottom:12px;background:var(--card);border:1px solid var(--acc)}.msg.err{border-color:var(--bad);color:var(--bad)}
+.art{border:1px solid var(--line);border-radius:6px;padding:12px;margin-bottom:8px}.art a{word-break:break-all}
+.bars{display:flex;align-items:flex-end;gap:6px;height:110px}.bars div{flex:1;background:var(--acc);min-height:2px;border-radius:3px 3px 0 0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:12px}.kpi{font-size:26px;font-weight:600}
+.banner{background:var(--warn);color:#fff;text-align:center;padding:4px;font-size:12px}
+</style></head><body>
+<div id="banner"></div><div id="app"></div>
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const h=(t,a={},...k)=>{const e=document.createElement(t);for(const[x,v]of Object.entries(a)){if(x==="class")e.className=v;else if(x.startsWith("on"))e.addEventListener(x.slice(2),v);else if(v!==false&&v!=null)e.setAttribute(x,v===true?"":v)}for(const c of k.flat())e.append(c?.nodeType?c:document.createTextNode(c??""));return e};
+async function api(path,opt){const r=await fetch(path,{credentials:"same-origin",headers:{"content-type":"application/json"},...opt,body:opt?.body?JSON.stringify(opt.body):undefined});const j=await r.json().catch(()=>({}));if(r.status===401)throw Object.assign(new Error("auth"),{auth:true});if(!r.ok)throw new Error(j.error||"Request failed");return j}
+const S={me:null,cfg:null,runs:[],page:"intake",sel:null,msg:null,detail:null,stats:null,timer:null,draftEdits:{}};
+const pending=()=>S.runs.filter(r=>["Gate 1 Pending","Gate 2 Pending"].includes(r.status));
+const pill=s=>h("span",{class:"pill "+(s==="Published"?"ok":/Reject|Failed|Expired/.test(s)?"bad":/Pending/.test(s)?"g":"")},s);
+const fmt=t=>t?new Date(t).toLocaleString():"";
+const left=t=>{const m=(new Date(t)-Date.now())/36e5;return m>0?Math.floor(m)+"h left":"overdue"};
+function say(text,err){S.msg=text?{text,err}:null;render()}
+
+function login(){
+  const root=$("#app");root.replaceChildren(h("main",{},h("div",{class:"card"},h("h2",{},"Sign in"),
+    h("p",{class:"mut"},"Approvers only. We email you a sign-in link."),
+    h("label",{},"Work email"),h("input",{type:"email",id:"em"}),
+    h("div",{class:"row"},h("button",{class:"p",onclick:async()=>{
+      try{const j=await api("/auth/request",{method:"POST",body:{email:$("#em").value}});
+        $("#lm").replaceChildren(j.devLink?h("span",{},"Dev mode (no email configured): ",h("a",{href:j.devLink},"open sign-in link")):"If that address is allowed, a link is on its way.")}catch(e){$("#lm").textContent=e.message}}},"Email me a link")),
+    h("p",{id:"lm",class:"mut"}))));
+}
+async function load(){
+  try{S.me=S.me||await api("/api/me");S.cfg=S.cfg||await api("/api/config");S.runs=await api("/api/runs");
+    if(S.sel)S.detail=await api("/api/runs/"+S.sel).catch(()=>null);
+    if(S.page==="dash")S.stats=await api("/api/stats");render()}
+  catch(e){if(e.auth){S.me=null;login()}else say(e.message,true)}
+}
+function render(){
+  if(!S.me)return;
+  $("#banner").replaceChildren(...(S.me.publishMode!=="live"?[h("div",{class:"banner"},"Dry-run mode: approvals work, but nothing is posted to LinkedIn")]:[]),...(S.me.mockAgent?[h("div",{class:"banner"},"Mock agent: articles are sample data")]:[]));
+  const nav=[["intake","Curation Intake"],["todo","My To-Do"],["hist","Run history"],["dash","Dashboard"]];
+  const root=$("#app");root.replaceChildren(
+    h("header",{},h("h1",{},"LinkedIn Content Automation"),h("nav",{},nav.map(([k,l])=>h("button",{class:S.page===k?"on":"",onclick:()=>{S.page=k;S.msg=null;load()}},l,k==="todo"&&pending().length?h("span",{class:"badge"},pending().length):""))),
+      h("span",{},S.me.email),h("button",{onclick:async()=>{await api("/auth/logout",{method:"POST"});S.me=null;login()}},"Sign out")),
+    h("main",{},S.msg?h("div",{class:"msg"+(S.msg.err?" err":"")},S.msg.text):"",({intake,todo,hist,dash})[S.page]()));
+}
+const sel=(id,opts,val,fn)=>h("select",{id,onchange:fn},opts.map(o=>h("option",{value:o,selected:o===val},o)));
+let form={industry:"",topic:"",audience:"",recency:"1",style:"Strategic",audited:true,publisher:"",notes:""};
+function intake(){
+  const C=S.cfg,ind=Object.keys(C.industries),tops=form.industry?C.industries[form.industry]:[];
+  const ok=form.industry&&form.topic&&form.audience;
+  const pick=(k,xs,ph)=>h("select",{onchange:e=>{form[k]=e.target.value;if(k==="industry")form.topic="";render()}},h("option",{value:""},ph),xs.map(x=>h("option",{value:x,selected:x===form[k]},x)));
+  return h("div",{class:"card"},h("h2",{},"Curation request"),h("div",{class:"grid"},
+    h("div",{},h("label",{},"Industry"),pick("industry",ind,"Select industry")),
+    h("div",{},h("label",{},"Topic"),(()=>{const s=pick("topic",tops,form.industry?"Select topic":"Pick an industry first");s.disabled=!form.industry;return s})()),
+    h("div",{},h("label",{},"Audience"),pick("audience",C.audiences,"Select audience")),
+    h("div",{},h("label",{},"Recency (months)"),pick("recency",C.recencyMonths.map(String),"")),
+    h("div",{},h("label",{},"Management style"),pick("style",C.styles,"")),
+    h("div",{},h("label",{},"Publisher / account (optional)"),h("input",{type:"text",value:form.publisher,oninput:e=>form.publisher=e.target.value}))),
+    h("label",{},h("input",{type:"checkbox",checked:form.audited,onchange:e=>form.audited=e.target.checked})," Audited sources only"),
+    h("label",{},"Special instructions"),h("textarea",{oninput:e=>form.notes=e.target.value},form.notes),
+    h("div",{class:"row"},h("button",{class:"p",disabled:!ok,onclick:async()=>{
+      try{const j=await api("/api/runs",{method:"POST",body:form});form={...form,topic:"",notes:""};S.page="hist";say(j.message);load()}catch(e){say(e.message,true)}}},"Submit request")));
+}
+function todo(){
+  const p=pending();
+  const list=h("div",{class:"card"},h("h2",{},"My To-Do"),p.length?p.map(r=>h("div",{class:"item",onclick:()=>{S.sel=r.id;load()}},h("span",{},"RUN-"+r.id+" · "+r.topic),h("span",{},pill(r.status)," ",h("span",{class:"mut"},left(r.due_at))))):h("p",{class:"mut"},"Nothing waiting for you."));
+  const d=S.detail&&S.detail.id===S.sel?S.detail:null;
+  return h("div",{},list,d?detail(d):"");
+}
+function gateCall(id,gate,body){return api(`/api/runs/${id}/${gate}`,{method:"POST",body}).then(j=>{say(j.message);S.draftEdits={};load()}).catch(e=>say(e.message,true))}
+const add=(el,...k)=>el.append(...k.flat());
+function detail(r){
+  const c=h("div",{class:"card"},h("h2",{},"RUN-"+r.id+" · "+r.topic),h("p",{class:"mut"},r.industry+" · "+r.audience+" · "+r.recency_months+" mo · "+r.style+(r.audited?" · audited sources":""),h("br"),"Status: ",pill(r.status)," Due ",fmt(r.due_at)));
+  const note=h("textarea",{id:"note",placeholder:"Comments (required for send back / request edits)"});
+  if(r.status==="Gate 1 Pending"){
+    add(c,h("h3",{},"Gate 1: choose an article"),r.articles.map(a=>h("div",{class:"art"},h("b",{},a.articleNumber+". "+a.title),h("div",{class:"mut"},a.publisher+" · "+a.publish_date),h("p",{},a.summary),h("a",{href:a.url,target:"_blank",rel:"noopener noreferrer"},a.url),
+      h("div",{class:"row"},h("button",{class:"p",onclick:()=>gateCall(r.id,"gate1",{decision:"approve",articleNumber:a.articleNumber})},"Approve article "+a.articleNumber)))),
+      note,h("div",{class:"row"},h("button",{class:"s",onclick:()=>gateCall(r.id,"gate1",{decision:"sendback",comments:note.value})},"Send back with comments"),rejectBtn(()=>gateCall(r.id,"gate1",{decision:"reject"}))));
+  }
+  if(r.status==="Gate 2 Pending"){
+    const ta=h("textarea",{style:"min-height:320px",oninput:()=>{S.draftEdits[r.id]=ta.value;wc.textContent=count(ta.value)}},S.draftEdits[r.id]??r.draft);
+    const count=t=>"Body: "+t.split(/\n\s*Source:/)[0].trim().split(/\s+/).filter(Boolean).length+" words (target 150 to 250)";
+    const wc=h("div",{class:"mut"},count(ta.value));
+    const ack=h("input",{type:"checkbox",onchange:()=>pub.disabled=!ack.checked});
+    const pub=h("button",{class:"p",disabled:true,onclick:()=>gateCall(r.id,"gate2",{decision:"publish",draft:ta.value,genAiAck:ack.checked})},"Approve & publish");
+    add(c,h("h3",{},"Gate 2: review the post (draft v"+r.draft_version+")"),ta,wc,
+      h("label",{},ack," I acknowledge this post was created with generative AI and human-reviewed."),note,
+      h("div",{class:"row"},pub,h("button",{class:"s",onclick:()=>gateCall(r.id,"gate2",{decision:"save",draft:ta.value})},"Save my edits"),
+        h("button",{class:"s",onclick:()=>gateCall(r.id,"gate2",{decision:"requestEdits",draft:ta.value,comments:note.value})},"Request edits"),rejectBtn(()=>gateCall(r.id,"gate2",{decision:"reject"}))));
+  }
+  if(r.events?.length)add(c,h("h3",{},"Audit trail"),r.events.map(e=>h("div",{class:"mut"},fmt(e.ts)+" · "+e.actor+" · "+e.text)));
+  return c;
+}
+function rejectBtn(fn){const b=h("button",{class:"d",onclick:()=>{if(b.dataset.arm){fn()}else{b.dataset.arm=1;b.textContent="Confirm reject";setTimeout(()=>{delete b.dataset.arm;b.textContent="Reject"},5000)}}},"Reject");return b}
+function hist(){
+  return h("div",{class:"card"},h("h2",{},"Run history"),S.runs.length?S.runs.map(r=>h("div",{class:"item",onclick:()=>{S.sel=r.id;S.page=["Gate 1 Pending","Gate 2 Pending"].includes(r.status)?"todo":"hist";load()}},h("span",{},"RUN-"+r.id+" · "+r.topic),h("span",{},pill(r.status)," ",h("span",{class:"mut"},fmt(r.created_at))))):h("p",{class:"mut"},"No runs yet."),
+    (S.detail&&S.page==="hist")?detail(S.detail):"");
+}
+function dash(){
+  const s=S.stats;if(!s)return h("div",{class:"card"},"Loading…");const max=Math.max(1,...s.weekly.map(w=>w.n));
+  return h("div",{},h("div",{class:"kpis"},[["Total runs",s.total],["Published",s.published],["Waiting",pending().length]].map(([l,v])=>h("div",{class:"card"},h("div",{class:"mut"},l),h("div",{class:"kpi"},v)))),
+    h("div",{class:"card"},h("h2",{},"Runs per week"),h("div",{class:"bars"},s.weekly.map(w=>h("div",{title:w.wk+": "+w.n,style:`height:${w.n/max*100}%`}))) ),
+    h("div",{class:"card"},h("h2",{},"By status"),s.byStatus.map(r=>h("div",{class:"item"},h("span",{},pill(r.status)),h("b",{},r.n)))),
+    h("button",{class:"s",onclick:load},"Refresh"));
+}
+load();S.timer=setInterval(()=>{if(S.me&&!document.hidden&&!document.activeElement?.matches("textarea,input,select"))load()},8000);
+</script></body></html>

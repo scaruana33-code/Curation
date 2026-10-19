@@ -1,0 +1,17 @@
+{
+  "name": "linkedin-content-automation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Governed LinkedIn content workflow: curation intake, two approval gates, publish, audit trail.",
+  "type": "module",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "MOCK_AGENT=true PUBLISH_MODE=dry-run node src/server.js",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "nodemailer": "^6.9.16"
+  }
+}
