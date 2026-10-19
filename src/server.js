@@ -97,7 +97,7 @@ export function createApp(db) {
   return app;
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+export function start() {
   const c = cfg();
   const db = openDb(c.dbPath);
   if (c.publishMode === "live" && (!c.liToken || !c.liAuthor)) throw new Error("PUBLISH_MODE=live needs LINKEDIN_ACCESS_TOKEN and LINKEDIN_AUTHOR_URN");
@@ -107,3 +107,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   setInterval(() => expireStale(db).catch(e => console.error(e)), 60 * 60e3).unref();
   createApp(db).listen(c.port, () => console.log(`Listening on ${c.port} (publish=${c.publishMode}, agent=${c.mockAgent ? "mock" : "live"})`));
 }
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) start();
